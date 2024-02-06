@@ -3,65 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Video Player with Multiple Audio Tracks</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-  #video-container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  video {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  #audio-select {
-    margin-top: 10px;
-  }
-</style>
+<title>Video Player with Audio Track Change</title>
 </head>
 <body>
 
-<div id="video-container">
-  <video id="videoPlayer" controls>
-    <source src="https://zfz8n-my.sharepoint.com/:v:/g/personal/mario_zfz8n_onmicrosoft_com/ES2PQT2UUaZDtkzX2zHHM0MBy-XDuQVlqK7gOZD98SKzGw?download=1" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <select id="audio-select"></select>
-</div>
+<input type="https://zfz8n-my.sharepoint.com/:v:/g/personal/mario_zfz8n_onmicrosoft_com/ES2PQT2UUaZDtkzX2zHHM0MBy-XDuQVlqK7gOZD98SKzGw?download=1 " accept=".mkv" id="video-input">
+<select id="audio-select"></select>
+<button id="change-audio-btn">Change Audio</button>
+<video id="videoPlayer" controls></video>
 
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg"></script>
 <script>
-  const video = document.getElementById('videoPlayer');
+  const videoInput = document.getElementById('video-input');
   const audioSelect = document.getElementById('audio-select');
+  const changeAudioBtn = document.getElementById('change-audio-btn');
+  const videoPlayer = document.getElementById('videoPlayer');
   
-  // Get available audio tracks
-  function getAudioTracks() {
-    const audioTracks = video.audioTracks;
-    for (let i = 0; i < audioTracks.length; i++) {
+  let videoBuffer;
+  
+  videoInput.addEventListener('change', async function() {
+    const file = this.files[0];
+    const fileArrayBuffer = await file.arrayBuffer();
+    videoBuffer = new Uint8Array(fileArrayBuffer);
+    
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+    
+    await ffmpeg.load();
+    ffmpeg.FS('writeFile', 'video.mkv', videoBuffer);
+    
+    const { data } = await ffmpeg.run('-i', 'video.mkv');
+    const stdout = data.replace(/\n/g, '');
+    
+    const audioStreams = stdout.match(/Stream.*Audio/g);
+    for (let i = 0; i < audioStreams.length; i++) {
       const option = document.createElement('option');
       option.value = i;
       option.text = `Audio Track ${i + 1}`;
       audioSelect.appendChild(option);
     }
-  }
-  
-  // Change audio track
-  audioSelect.addEventListener('change', function() {
-    const selectedTrackIndex = parseInt(this.value);
-    video.audioTracks[selectedTrackIndex].enabled = true;
-    for (let i = 0; i < video.audioTracks.length; i++) {
-      if (i !== selectedTrackIndex) {
-        video.audioTracks[i].enabled = false;
-      }
-    }
   });
   
-  // Initialize
-  getAudioTracks();
+  changeAudioBtn.addEventListener('click', async function() {
+    const selectedTrackIndex = audioSelect.value;
+    
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+    
+    await ffmpeg.load();
+    ffmpeg.FS('writeFile', 'video.mkv', videoBuffer);
+    await ffmpeg.run('-i', 'video.mkv', '-map', `0:v:0`, '-map', `0:a:${selectedTrackIndex}`, 'output.mp4');
+    
+    const data = ffmpeg.FS('readFile', 'output.mp4');
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+    
+    videoPlayer.src = url;
+    videoPlayer.play();
+  });
 </script>
 
 </body>
