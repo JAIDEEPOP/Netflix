@@ -7,60 +7,45 @@
 </head>
 <body>
 
-<input type="https://zfz8n-my.sharepoint.com/:v:/g/personal/mario_zfz8n_onmicrosoft_com/ES2PQT2UUaZDtkzX2zHHM0MBy-XDuQVlqK7gOZD98SKzGw?download=1 " accept=".mkv" id="video-input">
 <select id="audio-select"></select>
 <button id="change-audio-btn">Change Audio</button>
 <video id="videoPlayer" controls></video>
 
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg"></script>
 <script>
-  const videoInput = document.getElementById('video-input');
   const audioSelect = document.getElementById('audio-select');
   const changeAudioBtn = document.getElementById('change-audio-btn');
   const videoPlayer = document.getElementById('videoPlayer');
   
-  let videoBuffer;
+  // Add your video link here
+  const videoLink = 'https://zfz8n-my.sharepoint.com/:v:/g/personal/mario_zfz8n_onmicrosoft_com/ES2PQT2UUaZDtkzX2zHHM0MBy-XDuQVlqK7gOZD98SKzGw?download=1';
   
-  videoInput.addEventListener('change', async function() {
-    const file = this.files[0];
-    const fileArrayBuffer = await file.arrayBuffer();
-    videoBuffer = new Uint8Array(fileArrayBuffer);
+  // Function to load video and get available audio tracks
+  async function loadVideo() {
+    videoPlayer.src = videoLink;
+    await videoPlayer.load();
     
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
-    
-    await ffmpeg.load();
-    ffmpeg.FS('writeFile', 'video.mkv', videoBuffer);
-    
-    const { data } = await ffmpeg.run('-i', 'video.mkv');
-    const stdout = data.replace(/\n/g, '');
-    
-    const audioStreams = stdout.match(/Stream.*Audio/g);
-    for (let i = 0; i < audioStreams.length; i++) {
+    const audioTracks = videoPlayer.audioTracks;
+    for (let i = 0; i < audioTracks.length; i++) {
       const option = document.createElement('option');
       option.value = i;
       option.text = `Audio Track ${i + 1}`;
       audioSelect.appendChild(option);
     }
+  }
+  
+  // Function to change audio track
+  changeAudioBtn.addEventListener('click', function() {
+    const selectedTrackIndex = audioSelect.value;
+    videoPlayer.audioTracks[selectedTrackIndex].enabled = true;
+    for (let i = 0; i < videoPlayer.audioTracks.length; i++) {
+      if (i !== selectedTrackIndex) {
+        videoPlayer.audioTracks[i].enabled = false;
+      }
+    }
   });
   
-  changeAudioBtn.addEventListener('click', async function() {
-    const selectedTrackIndex = audioSelect.value;
-    
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
-    
-    await ffmpeg.load();
-    ffmpeg.FS('writeFile', 'video.mkv', videoBuffer);
-    await ffmpeg.run('-i', 'video.mkv', '-map', `0:v:0`, '-map', `0:a:${selectedTrackIndex}`, 'output.mp4');
-    
-    const data = ffmpeg.FS('readFile', 'output.mp4');
-    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-    const url = URL.createObjectURL(blob);
-    
-    videoPlayer.src = url;
-    videoPlayer.play();
-  });
+  // Initialize
+  loadVideo();
 </script>
 
 </body>
