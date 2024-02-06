@@ -3,37 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Video Player with Audio Track Change</title>
+<title>Network Stream Video Player</title>
 </head>
 <body>
 
+<input type="text" id="video-link" placeholder="Enter video link">
 <select id="audio-select"></select>
+<button id="load-video-btn">Load Video</button>
 <button id="change-audio-btn">Change Audio</button>
 <video id="videoPlayer" controls></video>
 
 <script>
+  const videoLinkInput = document.getElementById('video-link');
   const audioSelect = document.getElementById('audio-select');
+  const loadVideoBtn = document.getElementById('load-video-btn');
   const changeAudioBtn = document.getElementById('change-audio-btn');
   const videoPlayer = document.getElementById('videoPlayer');
-  
-  // Add your video link here
-  const videoLink = 'https://zfz8n-my.sharepoint.com/:v:/g/personal/mario_zfz8n_onmicrosoft_com/ES2PQT2UUaZDtkzX2zHHM0MBy-XDuQVlqK7gOZD98SKzGw?download=1';
-  
-  // Function to load video and get available audio tracks
-  async function loadVideo() {
+
+  // Load video from network stream
+  loadVideoBtn.addEventListener('click', function() {
+    const videoLink = videoLinkInput.value;
     videoPlayer.src = videoLink;
-    await videoPlayer.load();
-    
-    const audioTracks = videoPlayer.audioTracks;
-    for (let i = 0; i < audioTracks.length; i++) {
-      const option = document.createElement('option');
-      option.value = i;
-      option.text = `Audio Track ${i + 1}`;
-      audioSelect.appendChild(option);
-    }
-  }
-  
-  // Function to change audio track
+    videoPlayer.load();
+    videoPlayer.play();
+
+    // Reset audio select options
+    audioSelect.innerHTML = '';
+    audioSelect.disabled = false;
+  });
+
+  // Change audio track
   changeAudioBtn.addEventListener('click', function() {
     const selectedTrackIndex = audioSelect.value;
     videoPlayer.audioTracks[selectedTrackIndex].enabled = true;
@@ -43,9 +42,17 @@
       }
     }
   });
-  
-  // Initialize
-  loadVideo();
+
+  // Listen for when metadata is loaded to get audio tracks
+  videoPlayer.addEventListener('loadedmetadata', function() {
+    const audioTracks = videoPlayer.audioTracks;
+    for (let i = 0; i < audioTracks.length; i++) {
+      const option = document.createElement('option');
+      option.value = i;
+      option.text = `Audio Track ${i + 1}`;
+      audioSelect.appendChild(option);
+    }
+  });
 </script>
 
 </body>
