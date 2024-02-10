@@ -3,12 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Video Player</title>
+    <title>Video Player with Audio Track Change</title>
+    <!-- Include Video.js CSS and JavaScript -->
+    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet">
+    <script src="https://vjs.zencdn.net/7.15.4/video.js"></script>
 </head>
 <body>
-    <video width="640" height="360" controls>
+    <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" width="640" height="360">
+        <!-- Add your video source(s) here -->
         <source src="https://zfz8n-my.sharepoint.com/:v:/g/personal/insane_zfz8n_onmicrosoft_com/EfI4ampMCQJLtynPtdoQcZMBEvSu7p3rlcNPjZiuRIFJ1g?download=1" type="video/mp4">
-        Your browser does not support the video tag.
+        <!-- Add multiple audio tracks -->
+        <track kind="captions" label="English" srclang="en" src="english.vtt">
+        <track kind="captions" label="Spanish" srclang="es" src="spanish.vtt">
     </video>
+
+    <script>
+        // Initialize Video.js player
+        var player = videojs('my-video');
+
+        // Get the current player's AudioTrackList object
+        var audioTrackList = player.audioTracks();
+
+        // Listen to the "change" event
+        audioTrackList.addEventListener('change', function() {
+            // Log the currently enabled AudioTrack label
+            for (var i = 0; i < audioTrackList.length; i++) {
+                var track = audioTrackList[i];
+                if (track.enabled) {
+                    console.log('Selected audio track:', track.label);
+                    return;
+                }
+            }
+        });
+    </script>
 </body>
 </html>
