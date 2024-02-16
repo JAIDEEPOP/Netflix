@@ -1,40 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player with Audio Track Change</title>
-    <!-- Include Video.js CSS and JavaScript -->
-    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet">
-    <script src="https://vjs.zencdn.net/7.15.4/video.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VLC Video Player</title>
+  <style>
+    #vlc-player {
+      width: 100%;
+      height: auto;
+    }
+  </style>
 </head>
 <body>
-    <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" width="640" height="360">
-        <!-- Add your video source(s) here -->
-        <source src="https://zfz8n-my.sharepoint.com/:v:/g/personal/insane_zfz8n_onmicrosoft_com/EfI4ampMCQJLtynPtdoQcZMBEvSu7p3rlcNPjZiuRIFJ1g?download=1" type="video/mp4">
-        <!-- Add multiple audio tracks -->
-        <track kind="captions" label="English" srclang="en" src="english.vtt">
-        <track kind="captions" label="Spanish" srclang="es" src="spanish.vtt">
-    </video>
+  <div id="vlc-player"></div>
+  <input type="text" id="videoUrl" placeholder="Enter video URL">
+  <button onclick="loadVideo()">Load Video</button>
+  <select id="audioTracks" onchange="changeAudioTrack()">
+    <!-- Audio track options will be added here dynamically using JavaScript -->
+  </select>
 
-    <script>
-        // Initialize Video.js player
-        var player = videojs('my-video');
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/video.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vlc-plugin@latest"></script>
 
-        // Get the current player's AudioTrackList object
-        var audioTrackList = player.audioTracks();
-
-        // Listen to the "change" event
-        audioTrackList.addEventListener('change', function() {
-            // Log the currently enabled AudioTrack label
-            for (var i = 0; i < audioTrackList.length; i++) {
-                var track = audioTrackList[i];
-                if (track.enabled) {
-                    console.log('Selected audio track:', track.label);
-                    return;
-                }
-            }
+  <script>
+    const player = new Vue({
+      el: '#vlc-player',
+      template: `<vlc :id="'vlc-player-instance' + uniqueId"></vlc>`,
+      data() {
+        return {
+          uniqueId: Math.random()
+        }
+      },
+      mounted() {
+        this.$nextTick(() => {
+          this.initVLCPlayer();
         });
-    </script>
+      },
+      methods: {
+        initVLCPlayer() {
+          this.$vlc.player = new VLCPlayer(`vlc-player-instance${this.uniqueId}`);
+          this.$vlc.player.aspectRatio('16:9');
+          this.$vlc.player.autoplay(false);
+        }
+      }
+    });
+
+    function loadVideo() {
+      const videoUrl = document.getElementById('videoUrl').value;
+      player.$vlc.player.source({
+        type: 'http',
+        src: videoUrl
+      });
+
+      // Fetch available audio tracks and populate the select element
+      const audioTracksSelect = document.getElementById('audioTracks');
+      player.$vlc.player.audioTracks().then(tracks => {
+        tracks.forEach((track, index) => {
+          const trackOption = document.createElement('option');
+          trackOption.value = index;
+          trackOption.textContent = `Track ${index + 1}`;
+          audioTracksSelect.appendChild(trackOption);
+        });
+      });
+    }
+
+    function changeAudioTrack() {
+      const audioTracksSelect = document.getElementById('audioTracks');
+      const selectedTrackIndex = parseInt(audioTracksSelect.value);
+      player.$vlc.player.audioTracks().then(tracks => {
+        tracks[selectedTrackIndex].select();
+      });
+    }
+  </script>
 </body>
 </html>
