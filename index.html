@@ -1,78 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VLC Video Player</title>
-  <style>
-    #vlc-player {
-      width: 100%;
-      height: auto;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Player</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="vlc-player"></div>
-  <input type="text" id="videoUrl" placeholder="Enter video URL">
-  <button onclick="loadVideo()">Load Video</button>
-  <select id="audioTracks" onchange="changeAudioTrack()">
-    <!-- Audio track options will be added here dynamically using JavaScript -->
-  </select>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/video.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vlc-plugin@latest"></script>
-
-  <script>
-    const player = new Vue({
-      el: '#vlc-player',
-      template: `<vlc :id="'vlc-player-instance' + uniqueId"></vlc>`,
-      data() {
-        return {
-          uniqueId: Math.random()
-        }
-      },
-      mounted() {
-        this.$nextTick(() => {
-          this.initVLCPlayer();
-        });
-      },
-      methods: {
-        initVLCPlayer() {
-          this.$vlc.player = new VLCPlayer(`vlc-player-instance${this.uniqueId}`);
-          this.$vlc.player.aspectRatio('16:9');
-          this.$vlc.player.autoplay(false);
-        }
-      }
-    });
-
-    function loadVideo() {
-      const videoUrl = document.getElementById('videoUrl').value;
-      player.$vlc.player.source({
-        type: 'http',
-        src: videoUrl
-      });
-
-      // Fetch available audio tracks and populate the select element
-      const audioTracksSelect = document.getElementById('audioTracks');
-      player.$vlc.player.audioTracks().then(tracks => {
-        tracks.forEach((track, index) => {
-          const trackOption = document.createElement('option');
-          trackOption.value = index;
-          trackOption.textContent = `Track ${index + 1}`;
-          audioTracksSelect.appendChild(trackOption);
-        });
-      });
-    }
-
-    function changeAudioTrack() {
-      const audioTracksSelect = document.getElementById('audioTracks');
-      const selectedTrackIndex = parseInt(audioTracksSelect.value);
-      player.$vlc.player.audioTracks().then(tracks => {
-        tracks[selectedTrackIndex].select();
-      });
-    }
-  </script>
+<video id="videoPlayer" controls>
+  <source src="https://zfz8n-my.sharepoint.com/:u:/g/personal/mario_zfz8n_onmicrosoft_com/Edxau7yfrUBHlVoPbKTeZRcBY1pCrCtdf31RromsQCFdKg?download=1" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+<div id="audioControls">
+  <button onclick="changeAudio('https://zfz8n-my.sharepoint.com/:v:/g/personal/mario_zfz8n_onmicrosoft_com/EZuG1WNk5PpIn_WNRl36G8gB97YtBU31JpdcR9GF4Wzd7g?download=1')">Audio 1</button>
+  <button onclick="changeAudio('https://zfz8n-my.sharepoint.com/:u:/g/personal/mario_zfz8n_onmicrosoft_com/EfKPv6NVzn1Mu-kyxqj1HswBAKc_loQO0kUPFcLE-ComXQ?download=1')">Audio 2</button>
+  <button onclick="changeAudio('https://zfz8n-my.sharepoint.com/:u:/g/personal/mario_zfz8n_onmicrosoft_com/ETMKI3L_fE5JhNUtM6ne2qwBzFLvRIUiK42FtdWVbOptpw?download=1')">Audio 3</button>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
